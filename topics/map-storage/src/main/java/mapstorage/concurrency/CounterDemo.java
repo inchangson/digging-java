@@ -50,6 +50,9 @@ public final class CounterDemo {
         System.out.println("synchronizedMap get+put = " + lostUpdate(Collections.synchronizedMap(new HashMap<>())));
         System.out.println("ConcurrentHashMap get+put = " + lostUpdate(new ConcurrentHashMap<>()));
         System.out.println("external lock = " + incrementSafely(Collections.synchronizedMap(new HashMap<>()), true));
+        System.out.println("HashMap external lock = " + incrementSafely(new HashMap<>(), true));
+        System.out.println("synchronizedMap compute = " + incrementSafely(Collections.synchronizedMap(new HashMap<>()), false));
+        System.out.println("compute = " + incrementSafely(new HashMap<>(), false));
         System.out.println("compute = " + incrementSafely(new ConcurrentHashMap<>(), false));
     }
 }
