@@ -4,7 +4,7 @@ Java 21. 각 소주제 커밋에서 해당 패키지의 README와 테스트를 �
 
 | 순서 | 패키지 | 질문 |
 | --- | --- | --- |
-| 1 | `hashmap` | 삽입한 키를 왜 못 찾을까? 충돌과 리사이즈는 어떻게 처리할까? |
+| 1 | `hashmap` | 키 조회·충돌·리사이즈는 어떻게 동작하며, 동시 put은 어디에서 삽입을 유실할까? |
 | 2 | `concurrency` | 안전한 메서드 두 개를 조합하면 안전할까? |
 | 3 | `cache.lru` | 조회가 왜 쓰기 작업이 될까? |
 | 4 | `cache.caffeine` | 데이터와 교체 정책을 왜 분리할까? |
@@ -30,10 +30,12 @@ Java 21. 각 소주제 커밋에서 해당 패키지의 README와 테스트를 �
 | --- | --- | --- |
 | 키의 동등성과 가변 키 문제 | 같은 요청은 같은 캐시 키로, 다른 데이터는 다른 키로 표현해야 한다. 삽입 뒤 키 변경은 조회·무효화를 깨뜨릴 수 있다. | [HashMap의 캐시 키 예제](src/main/java/mapstorage/hashmap/README.md#9-캐시와-트랜잭션으로-가져갈-네-가지) |
 | 해시 분산과 충돌 | 키 계약이 맞아도 편중된 hash는 조회 비용을 늘린다. 충돌 처리와 캐시 퇴출 정책은 다른 문제다. | [캐시의 책임](src/main/java/mapstorage/cache/README.md) |
+| 동시 put의 버킷·next·size 경쟁 | 각 메서드 내부의 안전성을 확보한 뒤, 여러 호출을 묶는 원자성 문제로 넘어간다. | [put 내부 경쟁](src/main/java/mapstorage/hashmap/README.md#두-스레드가-put하면-버킷과-충돌-처리에서-삽입이-유실되는-흐름) → [동시성](src/main/java/mapstorage/concurrency/README.md) |
 | 메모리에 키·값 저장 | 원본에서 재생성할 캐시와, 커밋된 상태를 복구해야 하는 저장소는 유실에 대한 요구가 다르다. | [캐시에서 저장소로](src/main/java/mapstorage/storage/README.md) |
 | put으로 한 키의 값 교체 | 두 put이 하나의 성공·실패 단위가 되지는 않는다. HashMap 자체에는 스레드 안전성도 없다. | [동시성](src/main/java/mapstorage/concurrency/README.md) → [원자적 이체](src/main/java/mapstorage/storage/atomic/README.md) |
 
-HashMap에서는 키 계약, 조회/교체, 충돌, 확장의 의미를 설명할 수 있으면 다음 단계로 간다.
+HashMap에서는 키 계약, 조회/교체, 충돌, 확장과 동시 put의 삽입 유실을 설명할 수 있으면 다음 단계로 간다.
+특히 빈 버킷의 `tab[i]`와 충돌 리스트의 `p.next`가 덮어써지는 순서를 직접 그려 본다.
 비트 연산과 트리 내부는 성능을 더 이해하기 위한 심화다. remove의 모든 분기나
 레드-블랙 트리 회전을 끝까지 외우는 것은 캐시·트랜잭션 학습의 선행 조건이 아니다.
 TreeMap도 선택 심화이며 HashMap 버킷의 TreeNode와 별도 구현이다.
